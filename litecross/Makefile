@@ -51,6 +51,12 @@ ifneq ($(LIBTOOL),)
 LIBTOOL_ARG = LIBTOOL=$(LIBTOOL)
 endif
 
+ifneq ($(findstring arm,$(TARGET)),)
+ifeq ($(shell $(CXX) -v 2>&1 | grep -c "clang"), 1)
+TOOLCHAIN_CONFIG += CXXFLAGS="-fbracket-depth=512 -g -O2"
+endif
+endif
+
 MAKE += MULTILIB_OSDIRNAMES=
 MAKE += INFO_DEPS= infodir=
 MAKE += ac_cv_prog_lex_root=lex.yy.c
