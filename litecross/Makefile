@@ -105,7 +105,7 @@ FULL_GCC_CONFIG += --with-build-sysroot=$(CURDIR)/obj_sysroot \
 	# end
 FULL_MUSL_CONFIG += CC="$(XGCC)" LIBCC="../obj_gcc/$(TARGET)/libgcc/libgcc.a" 
 MUSL_VARS = AR=../obj_binutils/binutils/ar RANLIB=../obj_binutils/binutils/ranlib
-obj_musl/.lc_configured: | obj_gcc/gcc/.lc_built
+obj_musl/.lc_configured: | obj_binutils/.lc_plugin obj_gcc/gcc/.lc_built
 obj_musl/.lc_built: | obj_gcc/$(TARGET)/libgcc/libgcc.a
 obj_gcc/gcc/.lc_built: | obj_sysroot/usr obj_sysroot/lib32 obj_sysroot/lib64 obj_sysroot/include
 obj_gcc/.lc_built: | obj_sysroot/.lc_libs obj_sysroot/.lc_headers
@@ -215,6 +215,11 @@ obj_gcc/.lc_configured: | obj_gcc src_gcc
 
 obj_gcc/gcc/.lc_built: | obj_gcc/.lc_configured
 	cd obj_gcc && $(MAKE) MAKE="$(MAKE) $(LIBTOOL_ARG)" all-gcc
+	touch $@
+
+obj_binutils/.lc_plugin: | obj_gcc/gcc/.lc_built
+	mkdir -p obj_binutils/bin obj_binutils/lib/bfd-plugins
+	ln -fns ../../../obj_gcc/gcc/liblto_plugin.so obj_binutils/lib/bfd-plugins
 	touch $@
 
 obj_musl/.lc_configured: | obj_musl src_musl
