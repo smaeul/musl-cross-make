@@ -1,0 +1,114 @@
+diff --git a/Makefile b/Makefile
+index e23a8332..b52bde67 100644
+--- a/Makefile
++++ b/Makefile
+@@ -119,6 +119,9 @@ $(OPTIMIZE_SRCS:$(srcdir)/%.c=obj/%.o) $(OPTIMIZE_SRCS:$(srcdir)/%.c=obj/%.lo):
+ MEMOPS_OBJS = $(filter %/memcpy.o %/memmove.o %/memcmp.o %/memset.o, $(LIBC_OBJS))
+ $(MEMOPS_OBJS) $(MEMOPS_OBJS:%.o=%.lo): CFLAGS_ALL += $(CFLAGS_MEMOPS)
+ 
++NOLTO_OBJS = $(CRT_OBJS) %/dlstart.lo
++$(NOLTO_OBJS): CFLAGS_ALL += $(CFLAGS_NOLTO)
++
+ NOSSP_OBJS = $(CRT_OBJS) $(LDSO_OBJS) $(filter \
+ 	%/__libc_start_main.o %/__init_tls.o %/__stack_chk_fail.o \
+ 	%/__set_thread_area.o %/memset.o %/memcpy.o \
+diff --git a/configure b/configure
+index 1e59c461..4195cc68 100755
+--- a/configure
++++ b/configure
+@@ -116,6 +116,7 @@ fi
+ CFLAGS_C99FSE=
+ CFLAGS_AUTO=
+ CFLAGS_MEMOPS=
++CFLAGS_NOLTO=
+ CFLAGS_NOSSP=
+ CFLAGS_TRY=
+ LDFLAGS_AUTO=
+@@ -371,6 +372,13 @@ fi
+ #
+ tryflag CFLAGS_C99FSE -Wa,--noexecstack
+ 
++#
++# Check for options to disable link-time optimization, which needs to be
++# disabled for translation units called from assembly. If not found,
++# this is not an error; we assume the toolchain does not do LTO.
++#
++tryflag CFLAGS_NOLTO -fno-lto
++
+ #
+ # Check for options to disable stack protector, which needs to be
+ # disabled for a few early-bootstrap translation units. If not found,
+@@ -756,6 +764,7 @@ CFLAGS = $CFLAGS
+ CFLAGS_AUTO = $CFLAGS_AUTO
+ CFLAGS_C99FSE = $CFLAGS_C99FSE
+ CFLAGS_MEMOPS = $CFLAGS_MEMOPS
++CFLAGS_NOLTO = $CFLAGS_NOLTO
+ CFLAGS_NOSSP = $CFLAGS_NOSSP
+ CPPFLAGS = $CPPFLAGS
+ LDFLAGS = $LDFLAGS
+diff --git a/src/thread/pthread_create.c b/src/thread/pthread_create.c
+index 439ee363..3b779759 100644
+--- a/src/thread/pthread_create.c
++++ b/src/thread/pthread_create.c
+@@ -164,7 +164,7 @@ static int start_c11(void *p)
+ /* pthread_key_create.c overrides this */
+ static volatile size_t dummy = 0;
+ weak_alias(dummy, __pthread_tsd_size);
+-static void *dummy_tsd[1] = { 0 };
++static void **dummy_tsd = (void *[1]){ 0 };
+ weak_alias(dummy_tsd, __pthread_tsd_main);
+ 
+ volatile int __block_new_threads = 0;
+diff --git a/src/thread/pthread_key_create.c b/src/thread/pthread_key_create.c
+index a78e507a..079b7207 100644
+--- a/src/thread/pthread_key_create.c
++++ b/src/thread/pthread_key_create.c
+@@ -1,7 +1,7 @@
+ #include "pthread_impl.h"
+ 
+ volatile size_t __pthread_tsd_size = sizeof(void *) * PTHREAD_KEYS_MAX;
+-void *__pthread_tsd_main[PTHREAD_KEYS_MAX] = { 0 };
++void **__pthread_tsd_main = (void *[PTHREAD_KEYS_MAX]){ 0 };
+ 
+ static void (*volatile keys[PTHREAD_KEYS_MAX])(void *);
+ 
+diff --git a/src/time/wcsftime.c b/src/time/wcsftime.c
+index 638e64f6..23500cc8 100644
+--- a/src/time/wcsftime.c
++++ b/src/time/wcsftime.c
+@@ -4,7 +4,7 @@
+ #include "locale_impl.h"
+ #include "libc.h"
+ 
+-const char *__strftime_fmt_1(char (*s)[100], size_t *l, int f, const struct tm *tm, locale_t loc);
++const char *__strftime_fmt_1(char (*s)[100], size_t *l, int f, const struct tm *tm, locale_t loc, int pad);
+ 
+ size_t __wcsftime_l(wchar_t *restrict s, size_t n, const wchar_t *restrict f, const struct tm *restrict tm, locale_t loc)
+ {
+@@ -14,7 +14,7 @@ size_t __wcsftime_l(wchar_t *restrict s, size_t n, const wchar_t *restrict f, co
+ 	wchar_t *p;
+ 	const char *t_mb;
+ 	const wchar_t *t;
+-	int plus;
++	int pad, plus;
+ 	unsigned long width;
+ 	for (l=0; l<n; f++) {
+ 		if (!*f) {
+@@ -26,6 +26,8 @@ size_t __wcsftime_l(wchar_t *restrict s, size_t n, const wchar_t *restrict f, co
+ 			continue;
+ 		}
+ 		f++;
++		pad = 0;
++		if (*f == '-' || *f == '_' || *f == '0') pad = *f++;
+ 		if ((plus = (*f == '+'))) f++;
+ 		width = wcstoul(f, &p, 10);
+ 		if (*p == 'C' || *p == 'F' || *p == 'G' || *p == 'Y') {
+@@ -35,7 +37,7 @@ size_t __wcsftime_l(wchar_t *restrict s, size_t n, const wchar_t *restrict f, co
+ 		}
+ 		f = p;
+ 		if (*f == 'E' || *f == 'O') f++;
+-		t_mb = __strftime_fmt_1(&buf, &k, *f, tm, loc);
++		t_mb = __strftime_fmt_1(&buf, &k, *f, tm, loc, pad);
+ 		if (!t_mb) break;
+ 		k = mbstowcs(wbuf, t_mb, sizeof wbuf / sizeof *wbuf);
+ 		if (k == (size_t)-1) return 0;
