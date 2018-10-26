@@ -60,6 +60,8 @@ endif
 MAKE += MULTILIB_OSDIRNAMES=
 MAKE += INFO_DEPS= infodir=
 MAKE += ac_cv_prog_lex_root=lex.yy.c
+MAKE += GENERATED_MANPAGES=
+make += MANFILES=
 MAKE += MAKEINFO=false
 
 FULL_BINUTILS_CONFIG = \

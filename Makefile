@@ -2,8 +2,8 @@
 SOURCES = sources
 
 CONFIG_SUB_REV = 3d5db9ebe860
-BINUTILS_VER = 2.31.1
-GCC_VER = 8.2.0
+BINUTILS_VER = 2.32
+GCC_VER = 9-20190324
 MUSL_VER = 1.1.21
 GMP_VER = 6.1.2
 MPC_VER = 1.1.0
@@ -11,7 +11,7 @@ MPFR_VER = 4.0.2
 LINUX_VER = 4.19.19
 
 GNU_SITE = https://ftp.gnu.org/pub/gnu
-GCC_SITE = $(GNU_SITE)/gcc
+GCC_SITE = https://gcc.gnu.org/pub/gcc
 BINUTILS_SITE = $(GNU_SITE)/binutils
 GMP_SITE = $(GNU_SITE)/gmp
 MPC_SITE = $(GNU_SITE)/mpc
@@ -59,7 +59,7 @@ $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/mpc*)): SITE = $(MPC_SIT
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/mpfr*)): SITE = $(MPFR_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/isl*)): SITE = $(ISL_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/binutils*)): SITE = $(BINUTILS_SITE)
-$(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/gcc*)): SITE = $(GCC_SITE)/$(basename $(basename $(notdir $@)))
+$(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/gcc*)): SITE = $(GCC_SITE)/$(if $(findstring -,$@),snapshots/$(GCC_VER),$(basename $(basename $(notdir $@))))
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/musl*)): SITE = $(MUSL_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-4*)): SITE = $(LINUX_SITE)/v4.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-3*)): SITE = $(LINUX_SITE)/v3.x

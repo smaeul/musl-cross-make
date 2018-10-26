@@ -1,0 +1,23 @@
+diff --git a/gcc/Makefile.in b/gcc/Makefile.in
+index 508c674cbdc5..58b9be7f9155 100644
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
+@@ -3290,18 +3290,6 @@ man: $(MANFILES) lang.man @GENINSRC@ srcman lang.srcman
+ srcman: $(MANFILES)
+ 	-cp -p $^ $(srcdir)/doc
+ 
+-doc/%.1: %.pod
+-	$(STAMP) $@
+-	-($(POD2MAN) --section=1 $< > $(@).T$$$$ && \
+-		mv -f $(@).T$$$$ $@) || \
+-		(rm -f $(@).T$$$$ && exit 1)
+-
+-doc/%.7: %.pod
+-	$(STAMP) $@
+-	-($(POD2MAN) --section=7 $< > $(@).T$$$$ && \
+-		mv -f $(@).T$$$$ $@) || \
+-		(rm -f $(@).T$$$$ && exit 1)
+-
+ %.pod: %.texi
+ 	$(STAMP) $@
+ 	-$(TEXI2POD) -DBUGURL="$(BUGURL_TEXI)" $< > $@
