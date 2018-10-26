@@ -1,0 +1,13 @@
+diff --git gcc-9-20190324/libssp/gets-chk.c.orig gcc-9-20190324/libssp/gets-chk.c
+index 67b9c18..9d99ab3 100644
+--- gcc-9-20190324/libssp/gets-chk.c.orig
++++ gcc-9-20190324/libssp/gets-chk.c
+@@ -51,7 +51,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ # include <string.h>
+ #endif
+ 
+-#if !(!defined __USE_ISOC11				\
++#if !(defined __STDC_VERSION__ && __STDC_VERSION__ < 201112L \
+       || (defined __cplusplus && __cplusplus <= 201103L))
+ extern char *gets (char *);
+ #endif

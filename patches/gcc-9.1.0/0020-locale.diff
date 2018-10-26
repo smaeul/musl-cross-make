@@ -1,0 +1,14 @@
+diff --git a/libstdc++-v3/config/locale/generic/c_locale.cc b/libstdc++-v3/config/locale/generic/c_locale.cc
+index 202002a962bd..4d9213105a66 100644
+--- a/libstdc++-v3/config/locale/generic/c_locale.cc
++++ b/libstdc++-v3/config/locale/generic/c_locale.cc
+@@ -223,9 +223,6 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     // Currently, the generic model only supports the "C" locale.
+     // See http://gcc.gnu.org/ml/libstdc++/2003-02/msg00345.html
+     __cloc = 0;
+-    if (strcmp(__s, "C"))
+-      __throw_runtime_error(__N("locale::facet::_S_create_c_locale "
+-			    "name not valid"));
+   }
+ 
+   void
